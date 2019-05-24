@@ -43,7 +43,6 @@ def main():
 
         return month_nr
 
-
     def input_user_amount():
 
         amount = ''
@@ -55,7 +54,6 @@ def main():
                 print("Please fill in a number")
 
         return amount
-
 
     def get_period(year, month_nr):
         """Takes in year and month_nr and returns from and until date"""
@@ -124,7 +122,6 @@ def main():
         # df = pd.read_excel('C:\\Users\\jniens\\Downloads\\reistransacties-3528010488672904 (11).xls')
         return df
 
-
     def filter_out_zero(df):
 
         df.drop(df.tail(1).index, inplace=True)
@@ -134,7 +131,6 @@ def main():
         del df['index']
 
         return df
-
 
     def open_browser_sogeti(from_date, amount):
 
@@ -276,7 +272,7 @@ def main():
             actionchains.perform()
 
             # Press voeg_lege_regel_toe or opslaan_controle at last row
-            if x < rows:
+            if x < rows -1:
                 voeg_lege_regel_toe = browser.find_element_by_css_selector(
                     'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input.button')
                 voeg_lege_regel_toe.click()
@@ -292,11 +288,11 @@ def main():
         for i in range(rows):
             vinkje = browser.find_element_by_id('regelcheck' + str(i + 1))
             vinkje.click()
+            
         # Press OpslaanControle
         opslaan_controle = browser.find_element_by_css_selector(
             'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input:nth-child(13)')
         opslaan_controle.click()
-
 
     year = input_user_year()
     month_nr = input_user_month()
