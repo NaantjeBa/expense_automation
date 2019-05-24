@@ -180,9 +180,9 @@ def main():
         # Click "vervolg declaratie
         browser.find_element_by_xpath('//*[@id="bvzm"]').click()
 
-        # Change iframe
-        frame = browser.find_element_by_xpath('//*[@id="node-34"]/div/div/div/div/iframe')
-        browser.switch_to.frame(frame)
+        # # Change iframe
+        # frame = browser.find_element_by_xpath('//*[@id="node-34"]/div/div/div/div/iframe')
+        # browser.switch_to.frame(frame)
 
         # Fill in month nr
         txt_box_monthnr = browser.find_element_by_xpath('//*[@id="decHeadings[0].decHeadingsValue"]')
