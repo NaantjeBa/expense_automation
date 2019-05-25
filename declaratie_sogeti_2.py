@@ -272,7 +272,7 @@ def main():
             actionchains.perform()
 
             # Press voeg_lege_regel_toe or opslaan_controle at last row
-            if x < rows -1:
+            if x < rows - 1:
                 voeg_lege_regel_toe = browser.find_element_by_css_selector(
                     'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input.button')
                 voeg_lege_regel_toe.click()
@@ -288,7 +288,7 @@ def main():
         for i in range(rows):
             vinkje = browser.find_element_by_id('regelcheck' + str(i + 1))
             vinkje.click()
-            
+
         # Press OpslaanControle
         opslaan_controle = browser.find_element_by_css_selector(
             'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input:nth-child(13)')
