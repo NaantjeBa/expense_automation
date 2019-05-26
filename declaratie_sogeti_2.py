@@ -3,23 +3,26 @@
 the online form on Einstein.sogeti.nl"""
 import calendar
 import datetime
-import tkinter
-from tkinter import filedialog
 import re
 import os
-import openpyxl
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 import glob
 import pandas as pd
 from selenium.webdriver.support.ui import Select
-import sys
+
 
 def main():
     """This is the main function"""
 
     def input_user_year():
+        """
+        Lets user input year, checks if input is a type int and returns it.
+
+        :return:
+        int: The value of the input year
+        """
 
         year = ''
         while type(year) != int:
@@ -32,6 +35,12 @@ def main():
         return year
 
     def input_user_month():
+        """
+        Lets user input month, checks if input is a type int and returns it.
+
+        :return:
+        int: The value of the input month
+        """
 
         month_nr = ''
         while type(month_nr) != int:
@@ -44,6 +53,12 @@ def main():
         return month_nr
 
     def input_user_amount():
+        """
+        Lets user input amount, checks if input is a type float and returns it.
+
+        :return:
+        float: The value of the input amount
+        """
 
         amount = ''
         while type(amount) != float:
@@ -56,14 +71,36 @@ def main():
         return amount
 
     def get_period(year, month_nr):
-        """Takes in year and month_nr and returns from and until date"""
+        """
+        Takes in year and month and returns first and last date.
+
+        Parameters:
+        year (int): The year value
+        month (int): The month value
+
+        :return:
+        from_date (datetime): The first date of the period
+        until_date (datetime): The last date of the period
+        """
+
         month_range = calendar.monthrange(year, month_nr)
         last_day = month_range[1]
         from_date = datetime.datetime(year, month_nr, 1)
         until_date = datetime.datetime(year, month_nr, last_day)
+
         return from_date, until_date
 
     def get_excelfile_ns(from_date, until_date):
+        """
+        Takes in first and last date, opens browser and downloads excel file from NS website.
+
+        Parameters:
+        from_date (datetime): The first date
+        until_date (datetime): The last date
+
+        :return:
+        Nothing
+        """
 
         # username = 'jesse.niens@sogeti.com'
         # password = 'D1hbwvN!'
@@ -112,17 +149,36 @@ def main():
         button_download = browser.find_element_by_css_selector('#ns-app > div.col-3b > div.title.box > ul > li > a')
         button_download.click()
 
-        "Pause until download is finished"
-        os.system('pause')
+        # "Pause until download is finished"
+        # os.system('pause')
 
     def read_in_df():
+        """
+        Reads in downloaded excel file and returns it as a dataframe.
+
+        Parameters:
+
+        :return:
+        df (dataframe): The dataframe containing the expenses
+        """
+
         list_of_files = glob.glob('C:\\Users\\jniens\\Downloads\\*')
         latest_file = max(list_of_files, key=os.path.getctime)
         df = pd.read_excel(latest_file)
         # df = pd.read_excel('C:\\Users\\jniens\\Downloads\\reistransacties-3528010488672904 (11).xls')
+
         return df
 
     def filter_out_zero(df):
+        """
+        Cleans the dataframe and returns it
+
+        Parameters:
+        df (dataframe): The dataframe containing the expenses
+
+        :return:
+        df (dataframe): The cleaned dataframe containing the expenses
+        """
 
         df.drop(df.tail(1).index, inplace=True)
         df = df[df["Prijs (incl. btw)"] != 0]
@@ -133,6 +189,16 @@ def main():
         return df
 
     def open_browser_sogeti(from_date, amount):
+        """
+        Reads in first date and amount, opens browser and fills in the expenses basics (including amount).
+
+        Parameters:
+        from_date (datetime): The first date
+        amount (float): The amount to be declared
+
+        :return:
+        browser (WebDriver): The driver object to be used to fill in the expenses row by row
+        """
 
         month_nr = from_date.month
         year = from_date.year
@@ -193,7 +259,16 @@ def main():
         return browser
 
     def loop_through_df(df, browser):
-        "Clean the dataframe"
+        """
+        Fills in the expenses row by row on the webpage.
+
+        Parameters:
+        df (dataframe): The dataframe containing the expenses
+        browser (WebDriver): The driver object to be used to fill in the expenses row by row
+
+        :return:
+        Nothing
+        """
         # nr_columns = len(df.columns)
         rows = len(df)
 
