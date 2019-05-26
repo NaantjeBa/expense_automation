@@ -69,7 +69,7 @@ def main():
 
         return amount
 
-    def get_period(year, month_nr):
+    def define_period(year, month_nr):
         """
         Takes in year and month and returns first and last date.
 
@@ -405,7 +405,7 @@ def main():
     year = input_user_year()
     month_nr = input_user_month()
     amount = input_user_amount()
-    from_date, until_date = get_period(year, month_nr)
+    from_date, until_date = define_period(year, month_nr)
     get_excelfile_ns(from_date, until_date)
     df = read_in_df()
     # df = pd.read_excel('C:\\Users\\jniens\\Downloads\\reistransacties-3528010488672904 (16).xls')
