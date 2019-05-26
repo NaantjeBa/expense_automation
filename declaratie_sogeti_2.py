@@ -20,8 +20,8 @@ def main():
         """
         Lets user input year, checks if input is a type int and returns it.
 
-        :return:
-        int: The value of the input year
+        :return: The value of the input year
+        :rtype: int
         """
 
         year = ''
@@ -37,9 +37,8 @@ def main():
     def input_user_month():
         """
         Lets user input month, checks if input is a type int and returns it.
-
-        :return:
-        int: The value of the input month
+        :return: The value of the input month
+        :rtype: int
         """
 
         month_nr = ''
@@ -56,8 +55,8 @@ def main():
         """
         Lets user input amount, checks if input is a type float and returns it.
 
-        :return:
-        float: The value of the input amount
+        :return: The value of the input amount
+        :rtype: float
         """
 
         amount = ''
@@ -74,13 +73,14 @@ def main():
         """
         Takes in year and month and returns first and last date.
 
-        Parameters:
-        year (int): The year value
-        month (int): The month value
-
-        :return:
-        from_date (datetime): The first date of the period
-        until_date (datetime): The last date of the period
+        :param year: The year value
+        :type year: int
+        :param month_nr: The month value
+        :type month_nr: int
+        :return: tuple (from_date, until_date)
+            WHERE
+            datetime from_date is the first date of the period
+            datetime until_date is the last date of the period
         """
 
         month_range = calendar.monthrange(year, month_nr)
@@ -93,13 +93,11 @@ def main():
     def get_excelfile_ns(from_date, until_date):
         """
         Takes in first and last date, opens browser and downloads excel file from NS website.
-
-        Parameters:
-        from_date (datetime): The first date
-        until_date (datetime): The last date
-
-        :return:
-        Nothing
+        :param from_date: The first date of the period
+        :type from_date: datetime
+        :param until_date: The last date of the period
+        :type until_date: datetime
+        :return: None
         """
 
         # username = 'jesse.niens@sogeti.com'
@@ -155,13 +153,9 @@ def main():
     def read_in_df():
         """
         Reads in downloaded excel file and returns it as a dataframe.
-
-        Parameters:
-
-        :return:
-        df (dataframe): The dataframe containing the expenses
+        :return: The dataframe containing the expenses
+        :rtype: dataframe
         """
-
         list_of_files = glob.glob('C:\\Users\\jniens\\Downloads\\*')
         latest_file = max(list_of_files, key=os.path.getctime)
         df = pd.read_excel(latest_file)
@@ -171,15 +165,13 @@ def main():
 
     def filter_out_zero(df):
         """
-        Cleans the dataframe and returns it
+        Cleans the dataframe and returns it.
 
-        Parameters:
-        df (dataframe): The dataframe containing the expenses
-
-        :return:
-        df (dataframe): The cleaned dataframe containing the expenses
+        :param df: The dataframe containing the expenses
+        :type df: dataframe
+        :return: The cleaned dataframe containing the expenses
+        :rtype: dataframe
         """
-
         df.drop(df.tail(1).index, inplace=True)
         df = df[df["Prijs (incl. btw)"] != 0]
         df = df.sort_values('Datum')
@@ -188,23 +180,65 @@ def main():
 
         return df
 
-    def open_browser_sogeti(from_date, amount):
+    def check_amount(df, input_amount):
+        """
+        Check whether inputted amount and calculated amount from Excel match and gives user option to continue if
+        values don't.
+
+        :param df: The dataframe containing the expenses
+        :type df: dataframe
+        :param input_amount: The input amount from user
+        :type input_amount: float
+        :return: None
+        """
+
+        # Calculate total amount
+        calc_amount = df['Prijs (incl. btw)'].sum()
+
+        # Round total amount to 2 decimals
+        calc_amount_round = round(calc_amount, 2)
+
+        # Check if input amount and calculated amount match
+        if calc_amount_round == input_amount:  # If both amounts match give user confirmation and continue
+            print("Input amount and calculated amount from expense report match!\n"
+                  "Continuing...")
+        else: # If amounts don't match inform user and give option to abort or continue anyway
+            print(f"Input amount and calculated amount don't match:\n"
+                  f"\n"
+                  f"Input amount: {input_amount}\n"
+                  f"Calculated amount: {calc_amount_round}\n")
+
+            while True:
+                value = input('Do you want to continue anyway [y to continue / n to quit]? ')
+                if value.lower() == 'y':
+                    print('Continuing...')
+                    break
+                elif value.lower() == 'n':
+                    print('Abort process...')
+                    exit()
+                else:
+                    print('Please input y or n')
+
+
+        return df
+
+    def open_browser_sogeti(from_date, input_amount):
         """
         Reads in first date and amount, opens browser and fills in the expenses basics (including amount).
 
-        Parameters:
-        from_date (datetime): The first date
-        amount (float): The amount to be declared
-
-        :return:
-        browser (WebDriver): The driver object to be used to fill in the expenses row by row
+        :param from_date: first date of the period
+        :type from_date: datetime
+        :param input_amount: The inputted amount of the user
+        :type input_amount: float
+        :return: The driver object to be used to fill in the expenses row by row
+        :rtype: WebDriver
         """
 
         month_nr = from_date.month
         year = from_date.year
         month_and_year = from_date.strftime('%B %Y')
         mijn_referentie = f'Expenses for {month_and_year}'
-        amount = str(amount)
+        input_amount = str(input_amount)
 
         # Open browser and go to einstein.sogeti.nl
         os.chdir('C:\\Users\\jniens\\Downloads')
@@ -237,7 +271,7 @@ def main():
 
         #Bedrag
         txt_box_amount = browser.find_element_by_xpath('/html/body/form/table/tbody/tr[10]/td[2]/input')
-        txt_box_amount.send_keys(amount)
+        txt_box_amount.send_keys(input_amount)
 
         # Click "vervolg declaratie
         browser.find_element_by_xpath('//*[@id="bvzm"]').click()
@@ -262,12 +296,11 @@ def main():
         """
         Fills in the expenses row by row on the webpage.
 
-        Parameters:
-        df (dataframe): The dataframe containing the expenses
-        browser (WebDriver): The driver object to be used to fill in the expenses row by row
-
-        :return:
-        Nothing
+        :param df: The dataframe containing the expenses
+        :type df: dataframe
+        :param browser: The driver object to be used to fill in the expenses row by row
+        :type browser: WebDriver
+        :return: None
         """
         # nr_columns = len(df.columns)
         rows = len(df)
@@ -374,9 +407,10 @@ def main():
     amount = input_user_amount()
     from_date, until_date = get_period(year, month_nr)
     get_excelfile_ns(from_date, until_date)
-    # df = check_prepare_df(df, amount)
     df = read_in_df()
+    # df = pd.read_excel('C:\\Users\\jniens\\Downloads\\reistransacties-3528010488672904 (16).xls')
     df = filter_out_zero(df)
+    check_amount(df, amount)
     browser = open_browser_sogeti(from_date, amount)
     loop_through_df(df, browser)
 
