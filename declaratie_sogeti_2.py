@@ -87,71 +87,104 @@ def main():
         """
 
         month_range = calendar.monthrange(year, month_nr)
+        first_day = 1
         last_day = month_range[1]
-        from_date = datetime.datetime(year, month_nr, 1)
+        from_date = datetime.datetime(year, month_nr, first_day)
         until_date = datetime.datetime(year, month_nr, last_day)
 
         return from_date, until_date
 
-    def get_excelfile_ns(from_date, until_date):
+    def string_period(from_date, until_date):
         """
-        Takes in first and last date, opens browser and downloads excel file from NS website.
+        Turns datetime objects into string objects to fill in on NS webpage.
+
+        :param from_date: from_date: The first date of the period
+        :type from_date: datetime
+        :param until_date: The last date of the period
+        :type until_date: datetime
+        :return: A dictionary containing the string-date values to fill in on NS webpage.
+        :rtype: dict
+        """
+        date_dict_str = dict()
+        date_dict_str['from_day'] = str(from_date.day).zfill(2)
+        date_dict_str['from_month'] = str(from_date.month).zfill(2)
+        date_dict_str['from_year'] = str(from_date.year).zfill(4)
+
+        date_dict_str['until_day'] = str(until_date.day).zfill(2)
+        date_dict_str['until_month'] = str(until_date.month).zfill(2)
+        date_dict_str['until_year'] = str(until_date.year).zfill(4)
+
+        return date_dict_str
+
+    def login_ns_webpage():
+        """
+        Takes in first and last date, opens browser and aks user to login.
+
+        :return: the webbrowser where user is logged in
+        :rtype: WebDriver
+        """
+
+        # Open browser and go to ns.nl login page
+        os.chdir('C:\\Users\\jniens\\Downloads')
+        browser_ns = webdriver.Chrome()
+        browser_ns.get('https://www.ns.nl/mijnnszakelijk/login?0')
+
+        "Print instruction message for user"
+        print("\n""Please log in to NS webpage using your credentials\n")
+
+        "Pause the program to go to let user log in and navigate to fill in page"
+        os.system('pause')
+
+        return browser_ns
+
+    def download_excel_file(from_date, until_date, browser_ns):
+        """
+
         :param from_date: The first date of the period
         :type from_date: datetime
         :param until_date: The last date of the period
         :type until_date: datetime
-        :return: None
+        :param browser_ns: The browser object where the user is logge in to NS webpage
+        :type browser_ns: WebDriver
+        :return:
         """
 
-        # username = 'jesse.niens@sogeti.com'
-        # password = 'D1hbwvN!'
+        "Get string values to fill in on NS webpage"
+        date_dict_str = string_period(from_date, until_date)
 
-        from_day_str = str(from_date.day).zfill(2)
-        from_month_str = str(from_date.month).zfill(2)
-        from_year_str = str(from_date.year).zfill(4)
+        "Click gemaakte reizen"
+        browser_ns.find_element_by_xpath('//*[@id="menuitem.label.hybristravelhistory"]').click()
 
-        until_day_str = str(until_date.day).zfill(2)
-        until_month_str = str(until_date.month).zfill(2)
-        until_year_str = str(until_date.year).zfill(4)
-
-        # Open browser and go to ns.nl login page
-        os.chdir('C:\\Users\\jniens\\Downloads')
-        browser = webdriver.Chrome()
-        browser.get('https://www.ns.nl/mijnnszakelijk/login?0')
-
-        # Pause the program to go to let user log in and navigate to fill in page
-        os.system('pause')
-
-        #klik gemaakte reizen
-        gemaakte_reizen = browser.find_element_by_xpath('//*[@id="menuitem.label.hybristravelhistory"]')
-        gemaakte_reizen.click()
-
-        from_day = browser.find_element_by_xpath('//*[@id="dayField"]')
+        from_day = browser_ns.find_element_by_xpath('//*[@id="dayField"]')
         from_day.clear()
-        from_day.send_keys(from_day_str)
-        from_month = browser.find_element_by_xpath('//*[@id="monthField"]')
+        from_day.send_keys(date_dict_str['from_day'])
+        from_month = browser_ns.find_element_by_xpath('//*[@id="monthField"]')
         from_month.clear()
-        from_month.send_keys(from_month_str)
-        from_year = browser.find_element_by_xpath('//*[@id="yearField"]')
+        from_month.send_keys(date_dict_str['from_month'])
+        from_year = browser_ns.find_element_by_xpath('//*[@id="yearField"]')
         from_year.clear()
-        from_year.send_keys(from_year_str)
-        actionchains = ActionChains(browser)
+        from_year.send_keys(date_dict_str['from_year'])
+        actionchains = ActionChains(browser_ns)
         actionchains.send_keys(Keys.TAB)
         actionchains.send_keys(Keys.TAB)
-        actionchains.send_keys(until_day_str)
-        actionchains.send_keys(until_month_str)
-        actionchains.send_keys(until_year_str)
+        actionchains.send_keys(date_dict_str['until_day'])
+        actionchains.send_keys(date_dict_str['until_month'])
+        actionchains.send_keys(date_dict_str['until_year'])
         actionchains.perform()
 
-        # Click the Zoeken button
-        button_zoeken = browser.find_element_by_xpath('/ html / body / main / div / div / div / div / div / div[2] / div[2] / div[1] / form / p / a[1] / span')
+        "Click the Zoeken button"
+        button_zoeken = browser_ns.find_element_by_xpath('/ html / body / main / div / div / div / div / div / div[2] / div[2] / div[1] / form / p / a[1] / span')
         button_zoeken.click()
-        # download the excel file
-        button_download = browser.find_element_by_css_selector('#ns-app > div.col-3b > div.title.box > ul > li > a')
+
+        "Download the excel file"
+        button_download = browser_ns.find_element_by_css_selector('#ns-app > div.col-3b > div.title.box > ul > li > a')
         button_download.click()
 
-        # "Pause until download is finished"
-        # os.system('pause')
+        "Inform user to wait until download is finished"
+        print("Please wait until download is finished")
+
+        "Pause until download is finished"
+        os.system('pause')
 
     def read_in_df():
         """
@@ -409,13 +442,13 @@ def main():
     month_nr = input_user_month()
     amount = input_user_amount()
     from_date, until_date = define_period(year, month_nr)
-    get_excelfile_ns(from_date, until_date)
-    df = read_in_df()
-    # df = pd.read_excel('C:\\Users\\jniens\\Downloads\\reistransacties-3528010488672904 (16).xls')
-    df = filter_out_zero(df)
-    check_amount(df, amount)
-    browser = open_browser_sogeti(from_date, amount)
-    loop_through_df(df, browser)
+    login_ns_webpage(from_date, until_date)
+    # df = read_in_df()
+    # # df = pd.read_excel('C:\\Users\\jniens\\Downloads\\reistransacties-3528010488672904 (16).xls')
+    # df = filter_out_zero(df)
+    # check_amount(df, amount)
+    # browser = open_browser_sogeti(from_date, amount)
+    # loop_through_df(df, browser)
 
 
 if __name__ == '__main__':
