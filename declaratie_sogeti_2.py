@@ -36,16 +36,19 @@ def main():
 
     def input_user_month():
         """
-        Lets user input month, checks if input is a type int and returns it.
+        Lets user input month, checks if input is a type int and between 0 and 13. Then returns it.
+
         :return: The value of the input month
         :rtype: int
         """
 
         month_nr = ''
-        while type(month_nr) != int:
+        within_range = False
+        while type(month_nr) != int or not within_range:
             try:
-                month_nr = input('Fill in expense month: ')
+                month_nr = input('Fill in expense month (between 0 and 13): ')
                 month_nr = int(month_nr)
+                within_range = 0 < month_nr < 13
             except ValueError:
                 print("Please fill in an integer")
 
