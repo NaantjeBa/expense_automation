@@ -11,6 +11,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 import glob
 import pandas as pd
 from selenium.webdriver.support.ui import Select
+from selenium.common.exceptions import NoSuchElementException
 
 
 def main():
@@ -137,7 +138,24 @@ def main():
 
         return browser_ns
 
-    def download_excel_file(from_date, until_date, browser_ns):
+    def check_ns_element(browser_ns):
+        """
+        Checks if element "gemaakte reizen" is found and clicks it
+        :param browser_ns: The browser where the user is supposed to be logged in.
+        :return: None
+        """
+
+        "Try to find 'gemaakte reizen' and click it"
+        gemaakte_reizen = None
+        while not gemaakte_reizen:
+            try:
+                gemaakte_reizen = browser_ns.find_element_by_xpath('//*[@id="menuitem.label.hybristravelhistory"]')
+                gemaakte_reizen.click()
+            except NoSuchElementException:
+                print("Gemaakte reizen niet gevonden")
+                os.system('pause')
+
+    def download_excel_file(date_dict_str, browser_ns):
         """
 
         :param from_date: The first date of the period
@@ -150,11 +168,6 @@ def main():
         """
 
         "Get string values to fill in on NS webpage"
-        date_dict_str = string_period(from_date, until_date)
-
-        "Click gemaakte reizen"
-        browser_ns.find_element_by_xpath('//*[@id="menuitem.label.hybristravelhistory"]').click()
-
         from_day = browser_ns.find_element_by_xpath('//*[@id="dayField"]')
         from_day.clear()
         from_day.send_keys(date_dict_str['from_day'])
@@ -442,7 +455,10 @@ def main():
     month_nr = input_user_month()
     amount = input_user_amount()
     from_date, until_date = define_period(year, month_nr)
-    login_ns_webpage(from_date, until_date)
+    date_dict_str = string_period(from_date, until_date)
+    browswer_ns = login_ns_webpage()
+    check_ns_element(browswer_ns)
+    download_excel_file(date_dict_str, browswer_ns)
     # df = read_in_df()
     # # df = pd.read_excel('C:\\Users\\jniens\\Downloads\\reistransacties-3528010488672904 (16).xls')
     # df = filter_out_zero(df)
