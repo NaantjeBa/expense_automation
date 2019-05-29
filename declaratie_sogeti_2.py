@@ -119,7 +119,7 @@ def main():
 
     def login_ns_webpage():
         """
-        Takes in first and last date, opens browser and aks user to login.
+        Opens browser and aks user to login to NS webpage.
 
         :return: the webbrowser where user is logged in
         :rtype: WebDriver
@@ -160,10 +160,8 @@ def main():
     def download_excel_file(date_dict_str, browser_ns):
         """
 
-        :param from_date: The first date of the period
-        :type from_date: datetime
-        :param until_date: The last date of the period
-        :type until_date: datetime
+        :param date_dict_str: A dictionary containing the dates to fill in on ns webpage in string format
+        :type date_dict_str: dict
         :param browser_ns: The browser object where the user is logge in to NS webpage
         :type browser_ns: WebDriver
         :return:
@@ -273,10 +271,57 @@ def main():
 
         return df
 
-    def open_browser_sogeti(from_date, input_amount):
+    def login_sogeti_webpage():
+        """
+       Opens browser and aks user to login to Sogeti webpage.
+
+        :return: the webbrowser where user is logged in
+        :rtype: WebDriver
+        """
+
+        # Open browser and go to ns.nl login page
+        os.chdir('C:\\Users\\jniens\\Downloads')
+        browser_sogeti = webdriver.Chrome()
+        browser_sogeti.get('https://einstein.sogeti.nl/')
+
+        "Print instruction message for user"
+        print("\n""Please log in to NS webpage using your credentials\n")
+
+        "Pause the program to go to let user log in and navigate to fill in page"
+        os.system('pause')
+
+        #mijnSogetibutton
+        browser_sogeti.find_element_by_xpath('//*[@id="block-menu-block-2"]/div/div/ul/li[2]/a').click()
+
+        return browser_sogeti
+
+    def check_sogeti_element(browser_sogeti):
+        """
+        Checks if element "Mijn Sogeti" is found and clicks it.
+
+        :param browser_sogeti: The browser where the user is supposed to be logged in.
+        :type browser_sogeti: WebDriver
+        :return: None
+        """
+
+        "Try to find 'gemaakte reizen' and click it"
+        mijn_sogeti = None
+        while not mijn_sogeti:
+            try:
+                mijn_sogeti = browser_sogeti.find_element_by_xpath('//*[@id="block-menu-block-2"]/div/div/ul/li[2]/a')
+                mijn_sogeti.click()
+            except NoSuchElementException:
+                print("Dit not find 'Gemaakte reizen'\n"
+                      "Please make sure you are logged in to the Sogeti webpage and see the 'Mijn Sogeti' element\n"
+                      "Then press Enter")
+                os.system('pause')
+
+    def fill_in_basics_sogeti(browser_sogeti, from_date, input_amount):
         """
         Reads in first date and amount, opens browser and fills in the expenses basics (including amount).
 
+        :param browser_sogeti: The webbrowser where user is logged in to Sogeti webpage.
+        :type browser_sogeti: WebDriver
         :param from_date: first date of the period
         :type from_date: datetime
         :param input_amount: The inputted amount of the user
@@ -291,57 +336,46 @@ def main():
         mijn_referentie = f'Expenses for {month_and_year}'
         input_amount = str(input_amount)
 
-        # Open browser and go to einstein.sogeti.nl
-        os.chdir('C:\\Users\\jniens\\Downloads')
-        browser = webdriver.Chrome()
-        browser.get('https://einstein.sogeti.nl/')
-
-        # Pause the program to go to let user log in and navigate to fill in page
-        os.system('pause')
-
-        #mijnSogetibutton
-        browser.find_element_by_xpath('//*[@id="block-menu-block-2"]/div/div/ul/li[2]/a').click()
-
-        #mijnDeclaratie
-        browser.find_element_by_xpath('//*[@id="block-menu-block-5"]/div/div/ul/li[5]/ul/li[1]/a').click()
+        # mijnDeclaratie
+        browser_sogeti.find_element_by_xpath('//*[@id="block-menu-block-5"]/div/div/ul/li[5]/ul/li[1]/a').click()
 
         # Find the iFrame on fill in page
-        frame = browser.find_element_by_xpath('//*[@id="node-34"]/div/div/div/div/iframe')
-        browser.switch_to.frame(frame)
+        frame = browser_sogeti.find_element_by_xpath('//*[@id="node-34"]/div/div/div/div/iframe')
+        browser_sogeti.switch_to.frame(frame)
 
         # dropdown Reiskosten YP
-        dropdown = Select(browser.find_element_by_xpath('/html/body/form/table/tbody/tr[4]/td/select'))
+        dropdown = Select(browser_sogeti.find_element_by_xpath('/html/body/form/table/tbody/tr[4]/td/select'))
         dropdown.select_by_visible_text('Reiskosten YP')
 
         # Press "Verder"
-        browser.find_element_by_xpath('//*[@id="verderButton"]').click()
+        browser_sogeti.find_element_by_xpath('//*[@id="verderButton"]').click()
 
         #Mijn referentie
-        txt_box_ref = browser.find_element_by_xpath('/html/body/form/table/tbody/tr[8]/td[2]/input')
+        txt_box_ref = browser_sogeti.find_element_by_xpath('/html/body/form/table/tbody/tr[8]/td[2]/input')
         txt_box_ref.send_keys(mijn_referentie)
 
         #Bedrag
-        txt_box_amount = browser.find_element_by_xpath('/html/body/form/table/tbody/tr[10]/td[2]/input')
+        txt_box_amount = browser_sogeti.find_element_by_xpath('/html/body/form/table/tbody/tr[10]/td[2]/input')
         txt_box_amount.send_keys(input_amount)
 
         # Click "vervolg declaratie
-        browser.find_element_by_xpath('//*[@id="bvzm"]').click()
+        browser_sogeti.find_element_by_xpath('//*[@id="bvzm"]').click()
 
         # # Change iframe
         # frame = browser.find_element_by_xpath('//*[@id="node-34"]/div/div/div/div/iframe')
         # browser.switch_to.frame(frame)
 
         # Fill in month nr
-        txt_box_monthnr = browser.find_element_by_xpath('//*[@id="decHeadings[0].decHeadingsValue"]')
+        txt_box_monthnr = browser_sogeti.find_element_by_xpath('//*[@id="decHeadings[0].decHeadingsValue"]')
         txt_box_monthnr.send_keys(month_nr)
         txt_box_monthnr.send_keys(Keys.TAB)
-        actionchains = ActionChains(browser)
+        actionchains = ActionChains(browser_sogeti)
         actionchains.send_keys(year)
         actionchains.send_keys(Keys.TAB)
         actionchains.send_keys(2)
         actionchains.perform()
 
-        return browser
+        return browser_sogeti
 
     def loop_through_df(df, browser):
         """
@@ -458,15 +492,17 @@ def main():
     amount = input_user_amount()
     from_date, until_date = define_period(year, month_nr)
     date_dict_str = string_period(from_date, until_date)
-    browswer_ns = login_ns_webpage()
-    check_ns_element(browswer_ns)
-    download_excel_file(date_dict_str, browswer_ns)
-    # df = read_in_df()
-    # # df = pd.read_excel('C:\\Users\\jniens\\Downloads\\reistransacties-3528010488672904 (16).xls')
-    # df = filter_out_zero(df)
-    # check_amount(df, amount)
-    # browser = open_browser_sogeti(from_date, amount)
-    # loop_through_df(df, browser)
+    browser_ns = login_ns_webpage()
+    check_ns_element(browser_ns)
+    download_excel_file(date_dict_str, browser_ns)
+    df_raw = read_in_df()
+    # df_raw = pd.read_excel('C:\\Users\\jniens\\Downloads\\reistransacties-3528010488672904 (16).xls')
+    df_filtered = filter_out_zero(df_raw)
+    check_amount(df_filtered, amount)
+    browser_sogeti = login_sogeti_webpage()
+    check_sogeti_element()
+    browser_sogeti = fill_in_basics_sogeti(browser_sogeti, from_date, amount)
+    loop_through_df(df_filtered, browser_sogeti)
 
 
 if __name__ == '__main__':
