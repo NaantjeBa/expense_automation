@@ -377,14 +377,21 @@ def main():
 
         return browser_sogeti
 
-    def loop_through_df(df, browser):
+    def find_element(x):
+        if x != 0:
+            x += 1
+        element_name = str(x) + "_2"
+
+        return element_name
+
+    def loop_through_df(df, browser_sogeti):
         """
         Fills in the expenses row by row on the webpage.
 
         :param df: The dataframe containing the expenses
         :type df: dataframe
-        :param browser: The driver object to be used to fill in the expenses row by row
-        :type browser: WebDriver
+        :param browser_sogeti: The driver object to be used to fill in the expenses row by row
+        :type browser_sogeti: WebDriver
         :return: None
         """
         # nr_columns = len(df.columns)
@@ -392,20 +399,13 @@ def main():
 
         "Modify for variable i based on variable x for inconsistencies in xpath names"
         for x, row in df.iterrows():
-            if x == 0:
-                i = 0
-                input_factuurdatum = browser.find_element_by_xpath('//*[@id="' + str(i) + '_2"]')
-            elif x == 1:
-                i = 2
-                input_factuurdatum = browser.find_element_by_name(str(i) + '_2')
-            else:
-                i = x + 1
-                input_factuurdatum = browser.find_element_by_xpath('//*[@id="' + str(i) + '_2"]')
+
+            element_name = find_element(x)
+            input_factuurdatum = browser_sogeti.find_element_by_name(element_name)
 
             "Extract datum, prev_datum and ov_bedrag"
             datum = row.Datum
             prev_datum = df.iloc[x - 1, 1]
-            #datum_str = datum.strftime('%d-%m-%Y')
             ov_bedrag = str(row['Prijs (incl. btw)'])
 
             "Determine 'ritnummer' based on datum and prev_datum"
@@ -452,7 +452,7 @@ def main():
 
             # Fill in the values in online form
             input_factuurdatum.send_keys(datum)
-            actionchains = ActionChains(browser)
+            actionchains = ActionChains(browser_sogeti)
             actionchains.send_keys(Keys.TAB)
             actionchains.send_keys(rit_nummer)
             actionchains.send_keys(Keys.TAB)
@@ -466,11 +466,11 @@ def main():
 
             # Press voeg_lege_regel_toe or opslaan_controle at last row
             if x < rows - 1:
-                voeg_lege_regel_toe = browser.find_element_by_css_selector(
+                voeg_lege_regel_toe = browser_sogeti.find_element_by_css_selector(
                     'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input.button')
                 voeg_lege_regel_toe.click()
             else:
-                opslaan_controle = browser.find_element_by_css_selector(
+                opslaan_controle = browser_sogeti.find_element_by_css_selector(
                     'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input:nth-child(13)')
                 opslaan_controle.click()
 
@@ -479,11 +479,11 @@ def main():
 
         # Unselect all rows
         for i in range(rows):
-            vinkje = browser.find_element_by_id('regelcheck' + str(i + 1))
+            vinkje = browser_sogeti.find_element_by_id('regelcheck' + str(i + 1))
             vinkje.click()
 
         # Press OpslaanControle
-        opslaan_controle = browser.find_element_by_css_selector(
+        opslaan_controle = browser_sogeti.find_element_by_css_selector(
             'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input:nth-child(13)')
         opslaan_controle.click()
 
@@ -492,15 +492,15 @@ def main():
     amount = input_user_amount()
     from_date, until_date = define_period(year, month_nr)
     date_dict_str = string_period(from_date, until_date)
-    browser_ns = login_ns_webpage()
-    check_ns_element(browser_ns)
-    download_excel_file(date_dict_str, browser_ns)
+    # browser_ns = login_ns_webpage()
+    # check_ns_element(browser_ns)
+    # download_excel_file(date_dict_str, browser_ns)
     df_raw = read_in_df()
     # df_raw = pd.read_excel('C:\\Users\\jniens\\Downloads\\reistransacties-3528010488672904 (16).xls')
     df_filtered = filter_out_zero(df_raw)
     check_amount(df_filtered, amount)
     browser_sogeti = login_sogeti_webpage()
-    check_sogeti_element()
+    check_sogeti_element(browser_sogeti)
     browser_sogeti = fill_in_basics_sogeti(browser_sogeti, from_date, amount)
     loop_through_df(df_filtered, browser_sogeti)
 
