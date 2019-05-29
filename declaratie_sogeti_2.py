@@ -152,7 +152,9 @@ def main():
                 gemaakte_reizen = browser_ns.find_element_by_xpath('//*[@id="menuitem.label.hybristravelhistory"]')
                 gemaakte_reizen.click()
             except NoSuchElementException:
-                print("Gemaakte reizen niet gevonden")
+                print("Dit not find 'Gemaakte reizen'\n"
+                      "Please make sure you are logged in to the NS webpage and see the 'Gemaakte Reizen' element\n"
+                      "Then press Enter")
                 os.system('pause')
 
     def download_excel_file(date_dict_str, browser_ns):
