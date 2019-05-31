@@ -131,7 +131,8 @@ def main():
         browser_ns.get('https://www.ns.nl/mijnnszakelijk/login?0')
 
         "Print instruction message for user"
-        print("\n""Please log in to NS webpage using your credentials\n")
+        print("---------------------------------------------------------------\n"
+              "Please log in to NS webpage using your credentials")
 
         "Pause the program to go to let user log in and navigate to fill in page"
         os.system('pause')
@@ -152,7 +153,8 @@ def main():
                 gemaakte_reizen = browser_ns.find_element_by_xpath('//*[@id="menuitem.label.hybristravelhistory"]')
                 gemaakte_reizen.click()
             except NoSuchElementException:
-                print("Dit not find 'Gemaakte reizen'\n"
+                print("---------------------------------------------------------------\n"
+                      "Dit not find 'Gemaakte reizen'\n"
                       "Please make sure you are logged in to the NS webpage and see the 'Gemaakte Reizen' element\n"
                       "Then press Enter")
                 os.system('pause')
@@ -194,7 +196,8 @@ def main():
         button_download.click()
 
         "Inform user to wait until download is finished"
-        print("Please wait until download is finished")
+        print("---------------------------------------------------------------\n"
+              "Please wait until download is finished")
 
         "Pause until download is finished"
         os.system('pause')
@@ -252,13 +255,15 @@ def main():
 
         # Check if input amount and calculated amount match
         if calc_amount_round == input_amount:  # If both amounts match give user confirmation and continue
-            print("Input amount and calculated amount from expense report match!\n"
+            print("---------------------------------------------------------------\n"
+                  "Input amount and calculated amount from expense report match!\n"
                   "Continuing...")
         else: # If amounts don't match inform user and give option to abort or continue anyway
-            print(f"Input amount and calculated amount don't match:\n"
+            print(f"---------------------------------------------------------------\n"
+                  "Input amount and calculated amount don't match:"
                   f"\n"
                   f"Input amount: {input_amount}\n"
-                  f"Calculated amount: {calc_amount_round}\n")
+                  f"Calculated amount: {calc_amount_round}")
 
             while True:
                 value = input('Do you want to continue anyway [y to continue / n to quit]? ')
@@ -266,10 +271,12 @@ def main():
                     print('Continuing...')
                     break
                 elif value.lower() == 'n':
-                    print('Abort process...')
+                    print("---------------------------------------------------------------\n"
+                          'Abort process...')
                     exit()
                 else:
-                    print('Please input y or n')
+                    print("---------------------------------------------------------------\n"
+                          'Please input y or n')
 
 
         return df
@@ -288,13 +295,11 @@ def main():
         browser_sogeti.get('https://einstein.sogeti.nl/')
 
         "Print instruction message for user"
-        print("\n""Please log in to NS webpage using your credentials\n")
+        print("---------------------------------------------------------------\n"
+              "Please log in to Sogeti webpage using your credentials")
 
         "Pause the program to go to let user log in and navigate to fill in page"
         os.system('pause')
-
-        #mijnSogetibutton
-        browser_sogeti.find_element_by_xpath('//*[@id="block-menu-block-2"]/div/div/ul/li[2]/a').click()
 
         return browser_sogeti
 
@@ -314,7 +319,8 @@ def main():
                 mijn_sogeti = browser_sogeti.find_element_by_xpath('//*[@id="block-menu-block-2"]/div/div/ul/li[2]/a')
                 mijn_sogeti.click()
             except NoSuchElementException:
-                print("Dit not find 'Gemaakte reizen'\n"
+                print("---------------------------------------------------------------\n"
+                      "Dit not find 'Gemaakte reizen'\n"
                       "Please make sure you are logged in to the Sogeti webpage and see the 'Mijn Sogeti' element\n"
                       "Then press Enter")
                 os.system('pause')
@@ -398,20 +404,20 @@ def main():
 
             return element_name
 
-        def return_date(row):
+        def return_date():
             datum = row.Datum
 
             return datum
 
-        def return_ovbedrag(row):
+        def return_ovbedrag():
             ov_bedrag = row['Prijs (incl. btw)']
             ov_bedrag_str = str(ov_bedrag)
 
             return ov_bedrag_str
 
-        def return_ritnummer(index, row, df, rit_nummer):
+        def return_ritnummer(rit_nummer):
             prev_datum = df.iloc[index - 1, 1]
-            datum = return_date(row)
+            datum = return_date()
 
             "Determine 'ritnummer' based on datum and prev_datum"
             if index == 0 or prev_datum != datum:
@@ -421,7 +427,7 @@ def main():
 
             return rit_nummer
 
-        def return_van_naar(row):
+        def return_van_naar():
             "Determine van_halte en naar_halte"
             omschrijving = row.Omschrijving
             find_cor = omschrijving.find('Correctietarief:')  # Checks if expense-record is Correctietarief
@@ -460,7 +466,7 @@ def main():
 
             return van_halte, naar_halte
 
-        def generate_element(element_name, browser_sogeti):
+        def generate_element():
 
             element = browser_sogeti.find_element_by_name(element_name)
 
@@ -514,11 +520,11 @@ def main():
         for index, row in df.iterrows():
 
             element_name = find_element(index)
-            datum = return_date(row)
-            ov_bedrag = return_ovbedrag(row)
-            rit_nummer = return_ritnummer(index, row, df, rit_nummer)
-            van_halte, naar_halte = return_van_naar(row)
-            element = generate_element(element_name, browser_sogeti)
+            datum = return_date()
+            ov_bedrag = return_ovbedrag()
+            rit_nummer = return_ritnummer(rit_nummer)
+            van_halte, naar_halte = return_van_naar()
+            element = generate_element()
             fill_in_values()
             press_button()
 
@@ -531,9 +537,9 @@ def main():
     amount = input_user_amount()
     from_date, until_date = define_period(year, month_nr)
     date_dict_str = string_period(from_date, until_date)
-    browser_ns = login_ns_webpage()
-    check_ns_element(browser_ns)
-    download_excel_file(date_dict_str, browser_ns)
+    # browser_ns = login_ns_webpage()
+    # check_ns_element(browser_ns)
+    # download_excel_file(date_dict_str, browser_ns)
     df_raw = read_in_df()
     # df_raw = pd.read_excel('C:\\Users\\jniens\\Downloads\\reistransacties-3528010488672904 (16).xls')
     df_filtered = filter_out_zero(df_raw)
