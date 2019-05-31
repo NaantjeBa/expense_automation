@@ -199,6 +199,9 @@ def main():
         "Pause until download is finished"
         os.system('pause')
 
+        "Close NS browser"
+        browser_ns.close()
+
     def read_in_df():
         """
         Reads in downloaded excel file and returns it as a dataframe.
@@ -377,76 +380,6 @@ def main():
 
         return browser_sogeti
 
-    def find_element(x, browser_sogeti):
-        if x != 0:
-            x += 1
-        element_name = str(x) + "_2"
-        element = browser_sogeti.find_element_by_name(element_name)
-
-        return element
-
-    def return_date(row):
-        datum = row.Datum
-
-        return datum
-
-    def return_ovbedrag(row):
-        ov_bedrag = row['Prijs (incl. btw)']
-        ov_bedrag_str = str(ov_bedrag)
-
-        return ov_bedrag_str
-
-    def return_ritnummer(x, row, df, rit_nummer):
-        prev_datum = df.iloc[x - 1, 1]
-        datum = return_date(row)
-
-        "Determine 'ritnummer' based on datum and prev_datum"
-        if x == 0 or prev_datum != datum:
-            rit_nummer = 1
-        else:
-            rit_nummer += 1
-
-        return rit_nummer
-
-    def return_van_naar(row):
-        "Determine van_halte en naar_halte"
-        omschrijving = row.Omschrijving
-        find_cor = omschrijving.find('Correctietarief:')  # Checks if expense-record is Correctietarief
-
-        find_uit = omschrijving.find('-uit:')
-
-        "Find at what index to slice string"
-        if find_uit > -1:
-            start_string = find_uit + 6
-        else:
-            start_string = 0
-
-        sliced_str = omschrijving[start_string:]  # Slice string
-        find_sep = sliced_str.find('-')  # Returns -1 if "-" is not found
-
-        "This part extracts start and stop for each record" \
-        "If Exception is raised it gives default values"
-        van_halte = "Vanaf halte/station"
-        naar_halte = "Naar halte/station"
-        try:
-            if find_cor != -1:
-                van_halte = "Correctietarief"
-                naar_halte = "Correctietarief"
-
-            elif find_sep > 0:
-                van_halte = sliced_str[:find_sep - 1]
-                naar_halte = sliced_str[find_sep + 2:]
-
-            else:
-                halte_regex = re.compile(r'(halte(\s[A-Z]\w+(\.)?)*)')
-                van_halte = halte_regex.findall(sliced_str)[0][0]
-                naar_halte = halte_regex.findall(sliced_str)[1][0]
-
-        except:
-            pass
-
-        return van_halte, naar_halte
-
     def loop_through_df(df, browser_sogeti):
         """
         Fills in the expenses row by row on the webpage.
@@ -457,18 +390,83 @@ def main():
         :type browser_sogeti: WebDriver
         :return: None
         """
-        # nr_columns = len(df.columns)
-        rows = len(df)
-        rit_nummer = 0
-        "Modify for variable i based on variable x for inconsistencies in xpath names"
-        for x, row in df.iterrows():
 
-            element = find_element(x, browser_sogeti)
+        def find_element(index):
+            if index != 0:
+                index += 1
+            element_name = str(index) + "_2"
+
+            return element_name
+
+        def return_date(row):
+            datum = row.Datum
+
+            return datum
+
+        def return_ovbedrag(row):
+            ov_bedrag = row['Prijs (incl. btw)']
+            ov_bedrag_str = str(ov_bedrag)
+
+            return ov_bedrag_str
+
+        def return_ritnummer(index, row, df, rit_nummer):
+            prev_datum = df.iloc[index - 1, 1]
             datum = return_date(row)
-            ov_bedrag = return_ovbedrag(row)
-            rit_nummer = return_ritnummer(x, row, df, rit_nummer)
-            van_halte, naar_halte = return_van_naar(row)
 
+            "Determine 'ritnummer' based on datum and prev_datum"
+            if index == 0 or prev_datum != datum:
+                rit_nummer = 1
+            else:
+                rit_nummer += 1
+
+            return rit_nummer
+
+        def return_van_naar(row):
+            "Determine van_halte en naar_halte"
+            omschrijving = row.Omschrijving
+            find_cor = omschrijving.find('Correctietarief:')  # Checks if expense-record is Correctietarief
+
+            find_uit = omschrijving.find('-uit:')
+
+            "Find at what index to slice string"
+            if find_uit > -1:
+                start_string = find_uit + 6
+            else:
+                start_string = 0
+
+            sliced_str = omschrijving[start_string:]  # Slice string
+            find_sep = sliced_str.find('-')  # Returns -1 if "-" is not found
+
+            "This part extracts start and stop for each record" \
+            "If Exception is raised it gives default values"
+            van_halte = "Vanaf halte/station"
+            naar_halte = "Naar halte/station"
+            try:
+                if find_cor != -1:
+                    van_halte = "Correctietarief"
+                    naar_halte = "Correctietarief"
+
+                elif find_sep > 0:
+                    van_halte = sliced_str[:find_sep - 1]
+                    naar_halte = sliced_str[find_sep + 2:]
+
+                else:
+                    halte_regex = re.compile(r'(halte(\s[A-Z]\w+(\.)?)*)')
+                    van_halte = halte_regex.findall(sliced_str)[0][0]
+                    naar_halte = halte_regex.findall(sliced_str)[1][0]
+
+            except:
+                pass
+
+            return van_halte, naar_halte
+
+        def generate_element(element_name, browser_sogeti):
+
+            element = browser_sogeti.find_element_by_name(element_name)
+
+            return element
+
+        def fill_in_values():
             # Fill in the values in online form
             element.send_keys(datum)
             actionchains = ActionChains(browser_sogeti)
@@ -483,44 +481,66 @@ def main():
             actionchains.send_keys(naar_halte)
             actionchains.perform()
 
+        def press_button():
             # Press voeg_lege_regel_toe or opslaan_controle at last row
-            if x < rows - 1:
-                voeg_lege_regel_toe = browser_sogeti.find_element_by_css_selector(
-                    'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input.button')
+            voeg_lege_regel_toe = browser_sogeti.find_element_by_css_selector(
+                'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input.button')
+            try:
+                opslaan_controle = browser_sogeti.find_element_by_css_selector(
+                'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input:nth-child(13)')
+            except NoSuchElementException:
+                print('Niet gevonden')
+
+            if index < rows - 1:
                 voeg_lege_regel_toe.click()
             else:
-                opslaan_controle = browser_sogeti.find_element_by_css_selector(
-                    'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input:nth-child(13)')
                 opslaan_controle.click()
+
+        def unselect_all():
+            opslaan_controle = browser_sogeti.find_element_by_css_selector(
+                'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input:nth-child(13)')
+
+            # Unselect all rows
+            for i in range(rows):
+                vinkje = browser_sogeti.find_element_by_id('regelcheck' + str(i + 1))
+                vinkje.click()
+
+            # Press OpslaanControle
+            opslaan_controle.click()
+
+        rows = len(df)
+        rit_nummer = 0
+        "Modify for variable i based on variable index for inconsistencies in xpath names"
+        for index, row in df.iterrows():
+
+            element_name = find_element(index)
+            datum = return_date(row)
+            ov_bedrag = return_ovbedrag(row)
+            rit_nummer = return_ritnummer(index, row, df, rit_nummer)
+            van_halte, naar_halte = return_van_naar(row)
+            element = generate_element(element_name, browser_sogeti)
+            fill_in_values()
+            press_button()
 
         # Pause the program, let user decide if he wants to progress
         os.system('pause')
+        unselect_all()
 
-        # Unselect all rows
-        for i in range(rows):
-            vinkje = browser_sogeti.find_element_by_id('regelcheck' + str(i + 1))
-            vinkje.click()
-
-        # Press OpslaanControle
-        opslaan_controle = browser_sogeti.find_element_by_css_selector(
-            'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input:nth-child(13)')
-        opslaan_controle.click()
-
-    # year = input_user_year()
-    # month_nr = input_user_month()
-    # amount = input_user_amount()
-    # from_date, until_date = define_period(year, month_nr)
-    # date_dict_str = string_period(from_date, until_date)
-    # browser_ns = login_ns_webpage()
-    # check_ns_element(browser_ns)
-    # download_excel_file(date_dict_str, browser_ns)
+    year = input_user_year()
+    month_nr = input_user_month()
+    amount = input_user_amount()
+    from_date, until_date = define_period(year, month_nr)
+    date_dict_str = string_period(from_date, until_date)
+    browser_ns = login_ns_webpage()
+    check_ns_element(browser_ns)
+    download_excel_file(date_dict_str, browser_ns)
     df_raw = read_in_df()
     # df_raw = pd.read_excel('C:\\Users\\jniens\\Downloads\\reistransacties-3528010488672904 (16).xls')
     df_filtered = filter_out_zero(df_raw)
-    # check_amount(df_filtered, amount)
-    # browser_sogeti = login_sogeti_webpage()
-    # check_sogeti_element(browser_sogeti)
-    # browser_sogeti = fill_in_basics_sogeti(browser_sogeti, from_date, amount)
+    check_amount(df_filtered, amount)
+    browser_sogeti = login_sogeti_webpage()
+    check_sogeti_element(browser_sogeti)
+    browser_sogeti = fill_in_basics_sogeti(browser_sogeti, from_date, amount)
     loop_through_df(df_filtered, browser_sogeti)
 
 
