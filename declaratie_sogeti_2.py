@@ -141,7 +141,8 @@ def main():
 
     def check_ns_element(browser_ns):
         """
-        Checks if element "gemaakte reizen" is found and clicks it
+        Checks if element "gemaakte reizen" is found and clicks it.
+
         :param browser_ns: The browser where the user is supposed to be logged in.
         :return: None
         """
@@ -161,6 +162,7 @@ def main():
 
     def download_excel_file(date_dict_str, browser_ns):
         """
+        Takes in browser and dictionary containing date strings and downloads excel file.
 
         :param date_dict_str: A dictionary containing the dates to fill in on ns webpage in string format
         :type date_dict_str: dict
@@ -208,6 +210,7 @@ def main():
     def read_in_df():
         """
         Reads in downloaded excel file and returns it as a dataframe.
+
         :return: The dataframe containing the expenses
         :rtype: dataframe
         """
@@ -398,6 +401,15 @@ def main():
         """
 
         def find_element(index):
+            """
+            Finds the element name of the input textbox based on the index of the dataframe.
+
+            :param index: the index of the row in the dataframe
+            :type index: int
+            :return: the name of the element to fill in the information
+            :rtype: str
+            """
+
             if index != 0:
                 index += 1
             element_name = str(index) + "_2"
@@ -405,17 +417,37 @@ def main():
             return element_name
 
         def return_date():
+            """
+            Returns the date of the row.
+
+            :return: the date of the expense
+            :rtype: str
+            """
             datum = row.Datum
 
             return datum
 
         def return_ovbedrag():
+            """
+            Returns the amount of the expense row.
+
+            :return: the expense amount
+            :rtype: str
+            """
             ov_bedrag = row['Prijs (incl. btw)']
             ov_bedrag_str = str(ov_bedrag)
 
             return ov_bedrag_str
 
         def return_ritnummer(rit_nummer):
+            """
+            Returns the ritnummer to fill in on online form.
+
+            :param rit_nummer: The rit_nummer of the previous row.
+            :type rit_nummer: int
+            :return: The rit_nummer for the current row
+            :rtype: int
+            """
             prev_datum = df.iloc[index - 1, 1]
             datum = return_date()
 
@@ -428,6 +460,11 @@ def main():
             return rit_nummer
 
         def return_van_naar():
+            """
+            Returns the from and to locations of the expense row.
+
+            :return:
+            """
             "Determine van_halte en naar_halte"
             omschrijving = row.Omschrijving
             find_cor = omschrijving.find('Correctietarief:')  # Checks if expense-record is Correctietarief
@@ -467,12 +504,23 @@ def main():
             return van_halte, naar_halte
 
         def generate_element():
+            """
+            Generates browser element based on string name.
+
+            :return: The element to fill in the first value (factuurdatum) of the expense row.
+            :rtype: WebElement
+            """
 
             element = browser_sogeti.find_element_by_name(element_name)
 
             return element
 
         def fill_in_values():
+            """
+            Fills in on values in in online form.
+
+            :return:
+            """
             # Fill in the values in online form
             element.send_keys(datum)
             actionchains = ActionChains(browser_sogeti)
@@ -488,6 +536,11 @@ def main():
             actionchains.perform()
 
         def press_button():
+            """
+            Decides whether to add new row or not based on which iteration it is on.
+
+            :return:
+            """
             # Press voeg_lege_regel_toe or opslaan_controle at last row
             voeg_lege_regel_toe = browser_sogeti.find_element_by_css_selector(
                 'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input.button')
@@ -503,6 +556,11 @@ def main():
                 opslaan_controle.click()
 
         def unselect_all():
+            """
+            Unselects all expenses on online form.
+
+            :return:
+            """
             opslaan_controle = browser_sogeti.find_element_by_css_selector(
                 'body > form > table:nth-child(3) > tbody > tr:nth-child(2) > td > input:nth-child(13)')
 
